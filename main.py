@@ -57,9 +57,9 @@ def upload_blob_string(bucket_name, csvString, destination_blob_name):
 
 
 def run(request):
-    print("Starting SweWindStatExcelLoader")
+    logging.info("Starting SweWindStatExcelLoader")
     file_name = ''
-    file_name = '/Users/henrik/data/Godkända anläggningar_14cols50rows.xlsx'
+    #file_name = '/Users/henrik/data/Godkända anläggningar_14cols50rows.xlsx'
     #file_name = '/Users/henrik/data/Godkända anläggningar_5cols15rows.xlsx'
     #file_name = '/Users/henrik/data/Godkända anläggningar_2cols3rows.xlsx'
     if file_name is not '':
@@ -73,7 +73,7 @@ def run(request):
     bucket_name = "swe-renew-energy-stat"
     destination_blob_name = "blob-csv"
     upload_blob_string(bucket_name, csvString, destination_blob_name)
-    print("Uploaded size={} to bucket {} and {}".format(df.size,bucket_name,destination_blob_name))
+    logging.info("Uploaded size={} to bucket {} and {}".format(df.size,bucket_name,destination_blob_name))
 
 
 if __name__ == '__main__':
