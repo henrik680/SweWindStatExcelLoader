@@ -2,21 +2,22 @@ import pandas as pd
 import re
 import requests
 import logging
+import json
+import argparse
 from google.cloud import storage
 from google.cloud.storage import Blob
 
 
-fileUrl = "http://epi6.energimyndigheten.se/SharePoint/Eugen/Godkända anläggningar.xlsx"
-bucket_name = "swe-renew-energy-stat"
-destination_blob_name = "blob-csv"
+logging.getLogger().setLevel(logging.INFO)
 
 
-def openExcelUrl(url):
+def open_excel_url(url):
+    logging.info("openExcel(...): url={}".format(url))
     s = requests.get(url).content
-    return openExcel(s)
+    return open_excel(s)
 
 
-def openExcel(file_or_content):
+def open_excel(file_or_content):
     df = pd.read_excel(file_or_content,
                        engine='openpyxl',
                        skiprows=4)
@@ -49,18 +50,34 @@ def upload_blob_string(bucket_name, csvString, destination_blob_name):
 
 def run(request):
     logging.info("Starting SweWindStatExcelLoader")
-    file_name = ''
-    #file_name = '/Users/henrik/data/Godkända anläggningar_14cols50rows.xlsx'
-    if file_name is not '':
-        logging.info("Excel File=" + file_name)
-        df = openExcel(file_name)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data', help='json with parameters')
+    args = parser.parse_args()
+    logging.info('run(...): requestr={}'.format(request))
+    logging.info('run(...): args={}'.format(args))
+    if request == None:
+        logging.info('run(...): data=' + args.data)
+        input_json = json.loads(str(args.data).replace("'",""))
     else:
-        logging.info("URL=" + fileUrl)
-        df = openExcelUrl(fileUrl)
+        input_json = request.get_json()
+
+    logging.info("request.args: {}".format(input_json))
+    bucket_name = input_json['bucket_target']
+    file_location = input_json['file_location']
+    destination_blob_name = input_json['destination_blob_name']
+    logging.info("\nbucket_name: {}\nfile_location: {}\ndestination_blob_name: {}".format(
+        bucket_name, file_location, destination_blob_name))
+
+    if file_location.startswith('http'):
+        logging.info("run(...) URL=" + file_location)
+        df = open_excel_url(file_location)
+    else:
+        logging.info("run(...) Excel File=" + file_location)
+        df = open_excel(file_location)
     csvString = remove_mid_newlines(df.to_csv(index=False, sep=';')) # Dropping empty column
     upload_blob_string(bucket_name, csvString, destination_blob_name)
     logging.info("Uploaded size={} to bucket {} and {}".format(df.size,bucket_name,destination_blob_name))
 
 
 if __name__ == '__main__':
-  run(234)
+    run(None)

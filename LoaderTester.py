@@ -8,11 +8,11 @@ def run(request):
     file_name = '/Users/henrik/data/Godkända anläggningar_14cols50rows.xlsx'
     if file_name is not '':
         logging.info("Excel File=" + file_name)
-        df = openExcel(file_name)
+        df = open_excel(file_name)
     else:
         fileUrl = "http://epi6.energimyndigheten.se/SharePoint/Eugen/Godkända anläggningar.xlsx"
         logging.info("URL=" + fileUrl)
-        df = openExcelUrl(fileUrl)
+        df = open_excel_url(fileUrl)
 
     print(df.to_csv(index=False))
     csvString = remove_mid_newlines(df.dropna(axis='columns').to_csv(index=False))
